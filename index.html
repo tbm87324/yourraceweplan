@@ -91,7 +91,7 @@
             transform: translateY(-1px);
         }
 
-        /* =========== ✅ MOBILE OPTIMIZATIONS FOR PORTRAIT MODE (NEW) =========== */
+        /* =========== MOBILE OPTIMIZATIONS FOR PORTRAIT MODE =========== */
         /* ทำให้ตารางสามารถเลื่อนในแนวนอนได้บนหน้าจอเล็ก */
         .table-container {
             overflow-x: auto;
@@ -179,7 +179,7 @@
                         <div class="space-y-3 pt-2">
                             <div>
                                 <label for="benchmarkDistanceKm" class="block text-xs font-medium text-gray-500">ระยะทาง (กม.)</label>
-                                <input type="number" step="0.1" id="benchmarkDistanceKm" value="10.0" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
+                                <input type="number" step="any" id="benchmarkDistanceKm" value="10.0" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-500">เวลาที่ทำได้ (ชม./นาที/วิ)</label>
@@ -201,7 +201,7 @@
                             </div>
                             <div>
                                 <label for="targetDistanceKm" class="block text-xs font-medium text-gray-500">ระยะทางแข่ง (กม.)</label>
-                                <input type="number" step="0.01" id="targetDistanceKm" value="42.195" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
+                                <input type="number" step="any" id="targetDistanceKm" value="42.195" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-500">เวลาเป้าหมาย (ชม./นาที/วิ)</label>
@@ -640,10 +640,12 @@
             document.getElementById('displayMaxHR').textContent = maxHR > 0 ? `${maxHR}` : 'N/A';
             document.getElementById('displayRHR').textContent = userRHR > 0 ? `${userRHR}` : 'N/A';
             
+            // ใช้ parseFloat เพื่ออ่านค่าทศนิยม (รองรับเลขเต็มด้วย)
             const bmDistKm = parseFloat(document.getElementById('benchmarkDistanceKm').value) || 0;
             const bmHours = parseInt(document.getElementById('bmHours').value) || 0;
             const bmMinutes = parseInt(document.getElementById('bmMinutes').value) || 0;
             const bmSeconds = parseInt(document.getElementById('bmSeconds').value) || 0;
+            // ใช้ parseFloat เพื่ออ่านค่าทศนิยม (รองรับเลขเต็มด้วย)
             const targetDistKm = parseFloat(document.getElementById('targetDistanceKm').value) || 0;
             const targetHours = parseInt(document.getElementById('targetHours').value) || 0;
             const targetMinutes = parseInt(document.getElementById('targetMinutes').value) || 0;
@@ -937,6 +939,8 @@
                     return;
                 }
                 
+                // การตรวจสอบนี้ถูกต้องแล้ว เนื่องจาก parseFloat จะจัดการค่าที่กรอกเข้ามาให้เป็นตัวเลข
+                // หากผู้ใช้ใส่ 10.2, parseFloat(10.2) จะได้ 10.2 ซึ่งมากกว่า 0 และทำให้เงื่อนไขผ่าน
                 if (currentMileage <= 0 || targetPaceSecs <= 0 || bmPaceSecs <= 0 || maxHR <= 100 || userRHR <= 30 || maxHR <= userRHR) {
                      alert('🚨 ข้อมูลไม่สมบูรณ์: โปรดระบุข้อมูลพื้นฐานให้ครบถ้วนและถูกต้อง (ปริมาณวิ่ง, Pace, อายุ, และ RHR)');
                      return;
