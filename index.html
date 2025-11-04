@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="#RacePlan">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png"> 
+    <title>#yourraceweplan</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // กำหนดค่า Tailwind Config เพื่อใช้สีและฟอนต์ตามสไตล์ใหม่ (ม่วง/เขียว)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#8b5cf6', // Indigo/Violet-600
+                        'primary-light': '#f3e8ff', // Violet-100
+                        'accent': '#10b981', // Emerald-500
+                        'accent-light': '#d1fae5', // Emerald-100
+                        'card-bg': '#ffffff',
+                        'bg-page': '#f8fafc', // Blue Gray 50
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles & Overrides */
+        body {
+            font-family: 'Kanit', 'Sarabun', sans-serif;
+        }
+
+        /* Shadow Style: เน้น Shadow นุ่มนวลตามภาพตัวอย่าง */
+        .card-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Input & Select Focus: สี Primary */
+        .input-style {
+            transition: all 0.2s;
+        }
+        .input-style:focus {
+            border-color: #8b5cf6 !important; /* primary */
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3) !important;
+            outline: none;
+        }
+
+        /* Custom Styles for Plan Table */
+        .clean-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        .clean-table th, .clean-table td {
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 6px; 
+            white-space: normal;
+            font-size: 0.8rem; 
+        }
+        .clean-table th:last-child, .clean-table td:last-child { border-right: none; }
+        .clean-table th { border-top: 1px solid #e5e7eb; background-color: #f3f4f6; }
+        .sticky-col { position: sticky; left: 0; z-index: 10; }
+
+        /* Highlight Rows */
+        .race-week { background-color: #fee2e2 !important; } 
+        .taper-week { background-color: #fffbeb !important; } 
+        .peak-week { background-color: #e6ffec !important; } 
+
+        /* Pace Colors based on HR Zones */
+        .pace-easy { color: #10b981; } 
+        .pace-marathon { color: #3b82f6; } 
+        .pace-tempo { color: #6366f1; } 
+        .pace-interval { color: #f97316; } 
+        .pace-goal { color: #ef4444; } 
+        .pace-recovery { color: #14b8a6; } 
+        
+        /* Submit Button Soft Glow Effect */
+        .soft-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.5), 0 2px 4px -2px rgba(139, 92, 246, 0.5);
+        }
+        .soft-button:hover:not([disabled]) {
+            box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.7), 0 4px 6px -4px rgba(139, 92, 246, 0.7);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-bg-page p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto bg-card-bg card-shadow rounded-2xl p-6 lg:p-10">
+        <header class="mb-8 border-b pb-4">
+            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+                <span class="text-primary mr-3">🏃‍♀️</span> โปรแกรมสร้างตารางซ้อมวิ่งอัตโนมัติ
+            </h1>
+            <p class="text-lg text-gray-600 mt-1">สร้างแผนซ้อมที่ปรับให้เหมาะสมกับระดับความฟิตและเป้าหมายของคุณ</p>
+        </header>
+
+        <form id="planForm">
+            <div class="grid lg:grid-cols-3 gap-8">
+                
+                <div class="lg:col-span-1 space-y-6 p-6 rounded-xl bg-gray-50/70 border border-gray-200 h-fit">
+                    <h2 class="text-xl font-bold text-primary border-b pb-2">1. ข้อมูลผู้ใช้และแผน</h2>
+                    
+                    <div>
+                        <label for="userName" class="block text-sm font-medium text-gray-700">ชื่อนักวิ่ง</label>
+                        <input type="text" id="userName" value="ชื่ออะไรพิมพ์มาตรงนี้ซะ" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary p-2 input-style">
+                    </div>
+                    
+                    <div>
+                        <label for="userAge" class="block text-sm font-medium text-gray-700">อายุ (ปี) **(คำนวณ Max HR)**</label>
+                        <input type="number" id="userAge" value="30" min="15" max="80" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary p-2 input-style">
+                    </div>
+                    
+                    <div>
+                        <label for="userRHR" class="block text-sm font-medium text-gray-700">RHR (ครั้ง/นาที) **(คำนวณ HR Zone)**</label>
+                        <input type="number" id="userRHR" value="55" min="30" max="100" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary p-2 input-style">
+                    </div>
+
+                    <div>
+                        <label for="currentWeeklyMileage" class="block text-sm font-medium text-gray-700">ปริมาณวิ่งปัจจุบัน (กม./สัปดาห์)</label>
+                        <input type="number" id="currentWeeklyMileage" value="20" min="5" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary p-2 input-style">
+                    </div>
+
+                    <div>
+                        <label for="experienceLevel" class="block text-sm font-medium text-gray-700">ระดับประสบการณ์</label>
+                        <select id="experienceLevel" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary p-2 input-style">
+                            <option value="Beginner">เริ่มต้น (0-1 ปี)</option>
+                            <option value="Intermediate" selected>ปานกลาง (1-3 ปี)</option>
+                            <option value="Advanced">สูง (3 ปีขึ้นไป)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="planDuration" class="block text-sm font-medium text-gray-700">ระยะเวลาแผนซ้อม (สัปดาห์)</label>
+                        <select id="planDuration" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary p-2 input-style">
+                            <option value="12">12 สัปดาห์</option>
+                            <option value="16" selected>16 สัปดาห์</option>
+                            <option value="20">20 สัปดาห์</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-1 space-y-6 p-6 rounded-xl bg-gray-50/70 border border-gray-200 h-fit">
+                    <h2 class="text-xl font-bold text-primary border-b pb-2">2. เป้าหมายและความฟิตปัจจุบัน</h2>
+
+                    <fieldset class="border border-primary-light p-3 rounded-lg bg-white shadow-sm">
+                        <legend class="text-sm font-semibold text-gray-800 px-2">ความฟิตปัจจุบัน (Benchmark)</legend>
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <label for="benchmarkDistanceKm" class="block text-xs font-medium text-gray-500">ระยะทาง (กม.)</label>
+                                <input type="number" step="0.1" id="benchmarkDistanceKm" value="10.0" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500">เวลาที่ทำได้ (ชม./นาที/วิ)</label>
+                                <div class="flex space-x-2 mt-1">
+                                    <input type="number" id="bmHours" value="0" min="0" class="w-1/3 text-center text-sm border-gray-300 rounded-lg p-2 input-style" placeholder="ชม.">
+                                    <input type="number" id="bmMinutes" value="50" min="0" max="59" class="w-1/3 text-center text-sm border-gray-300 rounded-lg p-2 input-style" placeholder="นาที">
+                                    <input type="number" id="bmSeconds" value="0" min="0" max="59" class="w-1/3 text-center text-sm border-gray-300 rounded-lg p-2 input-style" placeholder="วิ.">
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="border border-primary-light p-3 rounded-lg bg-white shadow-sm">
+                        <legend class="text-sm font-semibold text-gray-800 px-2">เป้าหมาย (Race)</legend>
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <label for="targetRaceName" class="block text-xs font-medium text-gray-500">ชื่องานวิ่งเป้าหมาย</label>
+                                <input type="text" id="targetRaceName" value="Full Marathon" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
+                            </div>
+                            <div>
+                                <label for="targetDistanceKm" class="block text-xs font-medium text-gray-500">ระยะทางแข่ง (กม.)</label>
+                                <input type="number" step="0.01" id="targetDistanceKm" value="42.195" class="mt-1 block w-full text-sm border-gray-300 rounded-lg shadow-sm p-2 input-style">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500">เวลาเป้าหมาย (ชม./นาที/วิ)</label>
+                                <div class="flex space-x-2 mt-1">
+                                    <input type="number" id="targetHours" value="4" min="0" class="w-1/3 text-center text-sm border-gray-300 rounded-lg p-2 input-style" placeholder="ชม.">
+                                    <input type="number" id="targetMinutes" value="30" min="0" max="59" class="w-1/3 text-center text-sm border-gray-300 rounded-lg p-2 input-style" placeholder="นาที">
+                                    <input type="number" id="targetSeconds" value="0" min="0" max="59" class="w-1/3 text-center text-sm border-gray-300 rounded-lg p-2 input-style" placeholder="วิ.">
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="lg:col-span-1 space-y-6">
+                    <fieldset class="p-6 rounded-xl bg-gray-50/70 border border-gray-200">
+                        <h2 class="text-xl font-bold text-primary border-b pb-2 mb-4">3. การจัดวันซ้อมหลัก</h2>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="longRunDay" class="block text-sm font-medium text-gray-700">Long Run</label>
+                                <select id="longRunDay" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2 input-style"></select>
+                                <p id="lrWarning" class="text-xs text-red-500 mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label for="intervalDay" class="block text-sm font-medium text-gray-700">Interval</label>
+                                <select id="intervalDay" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2 input-style"></select>
+                                <p id="intervalWarning" class="text-xs text-red-500 mt-1 hidden"></p>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="tempoDay" class="block text-sm font-medium text-gray-700">Tempo</label>
+                                <select id="tempoDay" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-2 input-style"></select>
+                                <p id="tempoWarning" class="text-xs text-red-500 mt-1 hidden"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-gray-300">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">วันพัก/พักฟื้น (Rest Day)</label>
+                            <div id="restDaySelector" class="grid grid-cols-4 gap-2 text-sm">
+                                </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="p-4 rounded-xl bg-accent-light border-l-4 border-accent card-shadow">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            เพซซ้อมโดยประมาณ
+                        </h3>
+                        <div class="space-y-1 text-sm">
+                            <p>❤️ **Max HR:** <span id="displayMaxHR" class="font-bold text-red-500">0</span> BPM</p>
+                            <p>😴 **RHR:** <span id="displayRHR" class="font-bold text-blue-500">0</span> BPM</p>
+                            <p>🏁 **Goal Pace:** <span id="displayGoalPace" class="font-bold pace-goal">0:00</span> / <span id="displayGoalHR" class="text-gray-500">Target HR</span></p>
+                            <p>🐌 **Easy/Recovery:** <span id="displayEasyPace" class="font-bold pace-easy">0:00</span> / <span id="displayEasyHR">Z2 (0-0 BPM)</span></p>
+                            <p>🐴 **Tempo/Marathon:** <span id="displayTempoPace" class="font-bold pace-tempo">0:00</span> / <span id="displayTempoHR">Z3 (0-0 BPM)</span></p>
+                            <p>🚀 **Interval/Speed:** <span id="displayIntervalPace" class="font-bold pace-interval">0:00</span> / <span id="displayIntervalHR">Z4 (0-0 BPM)</span></p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="mt-8 pt-4 border-t">
+                <button type="submit" id="submitButton" class="w-full text-white font-bold py-3 px-4 rounded-lg soft-button bg-primary transition duration-150 text-lg">
+                    สร้างโปรแกรมซ้อม 16 สัปดาห์
+                </button>
+            </div>
+        </form>
+
+        <div id="planOutputContainer" class="mt-10 pt-6 border-t">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4" id="displayUserNameHeader"></h2>
+            
+            <div id="volumeGraphOutput" class="bg-white p-4 rounded-xl shadow-md mb-8 hidden border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center">
+                    <span class="text-accent mr-2">📊</span> กราฟปริมาณวิ่งรายสัปดาห์ (Volume Progression)
+                </h3>
+                <div class="relative h-64 w-full border-l border-b border-gray-300">
+                    <div id="volumeGraph" class="h-full w-full flex items-end justify-between px-2">
+                        </div>
+                    <div class="absolute top-0 right-full pr-2 text-xs text-gray-500 font-bold">
+                        <span id="maxVolumeDisplay">0</span> กม.
+                    </div>
+                    <div class="absolute top-1/2 right-full pr-2 text-xs text-gray-400 -translate-y-1/2">
+                        50%
+                    </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-500 text-center">
+                    <span class="bg-primary text-white px-2 py-0.5 rounded-full text-xs font-medium">Build</span>
+                    <span class="bg-gray-400 text-white px-2 py-0.5 rounded-full text-xs font-medium">Cutback (♻️)</span>
+                    <span class="bg-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">Taper (🔻)</span>
+                    <span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">Race (🏁)</span>
+                    <span class="font-bold text-orange-600 text-xs ml-2">--- Long Run</span>
+                </div>
+            </div>
+
+            <div id="planOutput">
+                <div class="text-center text-gray-500 py-10">กรุณากรอกข้อมูลและกดปุ่ม 'สร้างโปรแกรมซ้อม' เพื่อเริ่ม</div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // --- 1. CONSTANTS ---
+        const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const DAY_NAMES_TH = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์'];
+        
+        // HR Zone Definitions (Percentage of Heart Rate Reserve - HRR)
+        // Karvonen Formula uses % of HRR (MaxHR - RHR)
+        const HR_ZONE_DEFS = {
+            'recovery': { min: 0.50, max: 0.60, color: 'pace-recovery' }, // Z1 (50-60% HRR)
+            'easy': { min: 0.60, max: 0.70, color: 'pace-easy' },         // Z2 (60-70% HRR)
+            'marathon': { min: 0.70, max: 0.80, color: 'pace-marathon' }, // Z3 Lower (70-80% HRR)
+            'tempo': { min: 0.75, max: 0.82, color: 'pace-tempo' },       // Z3 Upper (75-82% HRR)
+            'interval': { min: 0.82, max: 0.92, color: 'pace-interval' }, // Z4/Z5 (82-92% HRR)
+            'goal': { min: 0.88, max: 0.95, color: 'pace-goal' },         // Race Day (88-95% HRR)
+            'rest': { min: 0, max: 0, color: 'text-gray-500' },
+        };
+
+        // --- 2. HR CALCULATOR (Using Karvonen Formula) ---
+        const HRCalculator = {
+            calculateMaxHR: (age) => {
+                const safeAge = parseInt(age) || 30;
+                return 220 - safeAge; // Fox-Haskell Formula
+            },
+            
+            // Karvonen Formula: Target HR = (Max HR - RHR) * % Intensity + RHR
+            calculateTargetHR: (maxHR, rhr, intensity) => {
+                const hrr = maxHR - rhr;
+                return Math.round((hrr * intensity) + rhr);
+            },
+
+            getPaceHRInfo: (paceType, maxHR, rhr) => {
+                if (paceType === 'rest') {
+                    return { hr: 'พักผ่อน', color: HR_ZONE_DEFS.rest.color };
+                }
+                
+                if (maxHR <= 0 || rhr <= 0 || maxHR <= rhr) {
+                    return { hr: 'N/A (ระบุ HR)', color: HR_ZONE_DEFS.easy.color };
+                }
+
+                const zoneDef = HR_ZONE_DEFS[paceType] || HR_ZONE_DEFS.easy;
+                
+                // Calculate HR using Karvonen formula for min and max intensity
+                const minHR = HRCalculator.calculateTargetHR(maxHR, rhr, zoneDef.min);
+                const maxHRBPM = HRCalculator.calculateTargetHR(maxHR, rhr, zoneDef.max);
+                
+                let zoneName;
+                if (paceType === 'easy' || paceType === 'recovery') { zoneName = 'Z1/2'; }
+                else if (paceType === 'marathon' || paceType === 'tempo') { zoneName = 'Z3'; }
+                else if (paceType === 'interval' || paceType === 'goal') { zoneName = 'Z4/5'; }
+                
+                const hrRange = `${zoneName} (${minHR}-${maxHRBPM} BPM)`;
+                
+                return { 
+                    hr: hrRange, 
+                    color: zoneDef.color,
+                    min: minHR,
+                    max: maxHRBPM
+                };
+            }
+        };
+
+
+        // --- 3. PACE CALCULATOR (Same as previous version) ---
+        const PaceCalculator = {
+            calculatePace: (h, m, s, distKm) => {
+                if (distKm === 0) return 0;
+                const totalSecs = (h * 3600) + (m * 60) + s;
+                return totalSecs / distKm;
+            },
+
+            formatPace: (paceSecs) => {
+                if (paceSecs <= 0) return '0:00';
+                const minutes = Math.floor(paceSecs / 60);
+                const seconds = Math.round(paceSecs % 60);
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            },
+
+            getTrainingPaces: (bmPaceSecs) => {
+                const easyFactor = 1.30;
+                const marathonFactor = 1.15; 
+                const tempoFactor = 1.05;
+                const intervalFactor = 0.95; 
+
+                return {
+                    easy: bmPaceSecs * easyFactor,
+                    marathon: bmPaceSecs * marathonFactor,
+                    tempo: bmPaceSecs * tempoFactor,
+                    interval: bmPaceSecs * intervalFactor
+                };
+            }
+        };
+
+        // --- 4. PLAN GENERATOR CORE LOGIC (Modified to pass RHR) ---
+        const PlanGenerator = {
+            calculateMaxLongRun: (targetDistanceKm, experienceLevel) => {
+                if (targetDistanceKm <= 10) return 10;
+                if (targetDistanceKm <= 21.1) return Math.min(25, targetDistanceKm * 1.25);
+                
+                let maxLongRunFactor = 0.7; 
+                if (experienceLevel === 'Intermediate') {
+                    maxLongRunFactor = 0.8;
+                } else if (experienceLevel === 'Advanced') {
+                    maxLongRunFactor = 0.9;
+                }
+                return Math.round(Math.min(targetDistanceKm * maxLongRunFactor, 42)); 
+            },
+
+            calculateVolumeProgression: (currentMileage, targetDistanceKm, durationWeeks, buildWeeks) => {
+                const taperWeeks = 3;
+                const targetVolumeFactor = targetDistanceKm <= 21.1 ? 2.5 : 1.5;
+                const requiredPeak = Math.max(currentMileage * 1.5, targetDistanceKm * targetVolumeFactor); 
+                const volumeIncrease = (requiredPeak - currentMileage) / buildWeeks;
+                
+                let volumes = [currentMileage];
+                let currentVolume = currentMileage;
+                
+                for (let w = 1; w <= durationWeeks; w++) {
+                    let nextVolume = currentVolume;
+
+                    if (w <= buildWeeks) {
+                        if (((w - 1) % 4) === 3) { 
+                            nextVolume *= 0.8; 
+                        } else {
+                            nextVolume += volumeIncrease; 
+                        }
+                    } else if (w >= durationWeeks - taperWeeks + 1) {
+                        if (w === durationWeeks - 2) nextVolume = requiredPeak * 0.7; 
+                        else if (w === durationWeeks - 1) nextVolume = requiredPeak * 0.5; 
+                        else if (w === durationWeeks) nextVolume = Math.min(requiredPeak * 0.2, 10); 
+                        else nextVolume = requiredPeak * 0.8; 
+                    } else if (w === buildWeeks + 1 && buildWeeks < durationWeeks - taperWeeks) {
+                        nextVolume = requiredPeak;
+                    }
+                    currentVolume = nextVolume;
+                    volumes.push(Math.max(Math.round(currentVolume), 5));
+                }
+                return { progression: volumes.slice(1), peak: Math.max(...volumes.slice(1)) };
+            },
+
+            calculateWorkoutDetails: (type, weeklyVolume, bmPaceSecs, maxHR, rhr) => { // Added rhr
+                const paces = PaceCalculator.getTrainingPaces(bmPaceSecs);
+                let pace, zone, baseDescription, distance;
+
+                distance = Math.round(weeklyVolume * 0.15); 
+                distance = Math.min(distance, 12); 
+                distance = Math.max(3, distance); 
+
+                switch (type) {
+                    case 'Interval':
+                        pace = paces.interval;
+                        zone = HRCalculator.getPaceHRInfo('interval', maxHR, rhr);
+                        baseDescription = `4 x 800ม. (@${PaceCalculator.formatPace(pace)}/พัก 1:1)`; 
+                        break;
+                    case 'Tempo':
+                        pace = paces.tempo;
+                        zone = HRCalculator.getPaceHRInfo('tempo', maxHR, rhr);
+                        baseDescription = `6 กม. Tempo Run (ต่อเนื่อง)`;
+                        break;
+                    case 'Easy':
+                    case 'Recovery':
+                        pace = paces.easy;
+                        zone = HRCalculator.getPaceHRInfo('easy', maxHR, rhr);
+                        baseDescription = `${distance} กม. Easy Run`;
+                        break;
+                    case 'Speed':
+                        pace = paces.interval * 0.9;
+                        zone = HRCalculator.getPaceHRInfo('interval', maxHR, rhr);
+                        baseDescription = `4 x 200ม. Strides (เร็ว)`;
+                        break;
+                    case 'Cross Train':
+                        pace = 0;
+                        zone = HRCalculator.getPaceHRInfo('rest', maxHR, rhr);
+                        baseDescription = 'Cross Train (ปั่น/ว่าย/เวท)';
+                        break;
+                    default:
+                        pace = paces.easy;
+                        zone = HRCalculator.getPaceHRInfo('easy', maxHR, rhr);
+                        baseDescription = `${distance} กม. Easy`;
+                        break;
+                }
+
+                return { pace, zone, baseDescription, distance, type };
+            },
+            
+            generatePlanStructure: (currentMileage, targetDistanceKm, targetPaceSecs, bmPaceSecs, trainingDaysCount, restDays, longRunDay, intervalDay, tempoDay, planDurationStr, userName, targetRaceName, experienceLevel, maxHR, rhr) => { // Added rhr
+                const durationWeeks = parseInt(planDurationStr);
+                const taperWeeks = 3;
+                const buildWeeks = durationWeeks - taperWeeks; 
+                const taperStartWeek = durationWeeks - taperWeeks + 1; 
+                const targetRaceType = targetDistanceKm >= 40 ? 'Long' : 'Short'; 
+
+                const { progression: weeklyVolumeProgression, peak: peakMileage } = PlanGenerator.calculateVolumeProgression(currentMileage, targetDistanceKm, durationWeeks, buildWeeks);
+                const maxLongRun = PlanGenerator.calculateMaxLongRun(targetDistanceKm, experienceLevel);
+
+                const weeklyProgression = [];
+                const lrProgression = [];
+                
+                for (let w = 1; w <= durationWeeks; w++) {
+                    const volume = weeklyVolumeProgression[w - 1];
+                    const isTaper = (w >= taperStartWeek && w < durationWeeks);
+                    const isRaceWeek = (w === durationWeeks);
+                    const isCutback = (((w - 1) % 4) === 3) && (w < taperStartWeek);
+
+                    weeklyProgression.push(Math.max(volume, 5)); 
+
+                    let lrDist = Math.round(volume * 0.3); 
+                    if (lrDist > maxLongRun) lrDist = maxLongRun;
+
+                    if (isRaceWeek) {
+                        lrDist = 3; 
+                    } else if (isTaper) {
+                        if (w === durationWeeks - 2) lrDist = Math.round(maxLongRun * 0.5);
+                        else if (w === durationWeeks - 1) lrDist = Math.round(maxLongRun * 0.25);
+                        else lrDist = Math.round(maxLongRun * 0.7); 
+                    } else if (isCutback) {
+                        const previousVolumeIndex = w - 4; 
+                        const previousVolume = previousVolumeIndex >= 0 ? weeklyVolumeProgression[previousVolumeIndex] : currentMileage;
+                        lrDist = Math.round(previousVolume * 0.3 * 0.7); 
+                    }
+                    
+                    lrProgression.push(Math.max(lrDist, 3)); 
+                }
+
+                const plan = [];
+                for (let w = 1; w <= durationWeeks; w++) {
+                    const lrDistance = lrProgression[w - 1];
+                    const weeklyVolume = weeklyProgression[w - 1]; 
+                    
+                    let isRaceWeek = (w === durationWeeks);
+                    let isTaper = (w >= taperStartWeek && w < durationWeeks);
+                    let isPeak = (weeklyVolume === peakMileage && !isTaper && !isRaceWeek);
+                    let requiredWorkouts = [];
+                    
+                    const longRunWorkout = { 
+                        priority: 0, 
+                        type: 'Long Run', 
+                        pace: (targetRaceType === 'Long' && w > 4 && !isTaper) ? PaceCalculator.getTrainingPaces(bmPaceSecs).marathon : PaceCalculator.getTrainingPaces(bmPaceSecs).easy, 
+                        zone: HRCalculator.getPaceHRInfo('marathon', maxHR, rhr), 
+                        distance: lrDistance, 
+                        baseDescription: `${lrDistance} กม. (${isTaper ? 'Easy' : (targetRaceType === 'Long' && w > 4) ? 'Progression' : 'Easy Run'})` 
+                    };
+                    
+                    if (isRaceWeek) {
+                        requiredWorkouts.push({ priority: 0, type: 'Race Day', pace: targetPaceSecs, zone: HRCalculator.getPaceHRInfo('goal', maxHR, rhr), baseDescription: `แข่งจริง ${targetRaceName} (${targetDistanceKm} กม.)`, distance: targetDistanceKm });
+                        const shakeoutDetails = PlanGenerator.calculateWorkoutDetails('Recovery', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                        requiredWorkouts.push({ priority: 1, type: 'Shakeout', pace: shakeoutDetails.pace, zone: shakeoutDetails.zone, baseDescription: `3 กม. Easy/Shakeout`, distance: 3 });
+                    } else if (isTaper) {
+                        const speedDetails = PlanGenerator.calculateWorkoutDetails('Speed', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                        requiredWorkouts = [ 
+                            longRunWorkout, 
+                            { priority: 1, type: 'Speed', pace: speedDetails.pace, zone: speedDetails.zone, baseDescription: speedDetails.baseDescription },
+                        ];
+                        const easyDetails = PlanGenerator.calculateWorkoutDetails('Easy', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                        requiredWorkouts.push({ priority: 2, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: `${Math.min(5, easyDetails.distance)} กม. Easy`, distance: Math.min(5, easyDetails.distance) });
+
+                    } else {
+                        const intervalDetails = PlanGenerator.calculateWorkoutDetails('Interval', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                        const tempoDetails = PlanGenerator.calculateWorkoutDetails('Tempo', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                        const easyDetails = PlanGenerator.calculateWorkoutDetails('Easy', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                        
+                        requiredWorkouts = [ 
+                            longRunWorkout, 
+                            { priority: 1, type: 'Interval', pace: intervalDetails.pace, zone: intervalDetails.zone, baseDescription: intervalDetails.baseDescription }, 
+                            { priority: 2, type: 'Tempo', pace: tempoDetails.pace, zone: tempoDetails.zone, baseDescription: tempoDetails.baseDescription }, 
+                            { priority: 3, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: easyDetails.baseDescription, distance: easyDetails.distance }, 
+                        ];
+                        
+                        if (trainingDaysCount > 4) { requiredWorkouts.push({ priority: 4, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: easyDetails.baseDescription, distance: easyDetails.distance }); }
+                    }
+
+                    if (trainingDaysCount > requiredWorkouts.length) { 
+                        requiredWorkouts.push(PlanGenerator.calculateWorkoutDetails('Cross Train', weeklyVolume, bmPaceSecs, maxHR, rhr)); 
+                    }
+                    
+                    requiredWorkouts.sort((a, b) => a.priority - b.priority);
+                    let weeklyWorkouts = requiredWorkouts.slice(0, trainingDaysCount); 
+                    
+                    let dailyPlan = DAYS_OF_WEEK.map(day => ({ day, workout: null }));
+                    
+                    const longRunMapDay = isRaceWeek ? DAYS_OF_WEEK.find(d => d === longRunDay) || 'Sunday' : longRunDay; 
+                    
+                    const mapWorkout = (day, workoutType) => {
+                        const index = dailyPlan.findIndex(d => d.day === day);
+                        const workout = weeklyWorkouts.find(w => w.type === workoutType || (workoutType === 'Long Run' && w.type === 'Long Run'));
+                        if (workout && index !== -1 && !restDays.includes(day) && !dailyPlan[index].workout) {
+                            dailyPlan[index].workout = workout;
+                            weeklyWorkouts = weeklyWorkouts.filter(w => w !== workout);
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    mapWorkout(longRunMapDay, isRaceWeek ? 'Race Day' : 'Long Run');
+                    mapWorkout(intervalDay, 'Interval');
+                    mapWorkout(tempoDay, 'Tempo');
+                    
+                    for (let i = 0; i < dailyPlan.length; i++) {
+                        const day = dailyPlan[i].day;
+                        if (!dailyPlan[i].workout && !restDays.includes(day) && weeklyWorkouts.length > 0) {
+                            dailyPlan[i].workout = weeklyWorkouts.shift();
+                        }
+                    }
+
+                    const restWorkoutTemplate = { type: 'Rest', baseDescription: 'พักผ่อน', pace: 0, zone: HRCalculator.getPaceHRInfo('rest', maxHR, rhr) };
+                    dailyPlan.forEach(d => {
+                        if (restDays.includes(d.day) && !d.workout) {
+                            d.workout = {...restWorkoutTemplate}; 
+                        }
+                    });
+
+                    if (isRaceWeek) {
+                         const raceDayIndex = DAYS_OF_WEEK.indexOf(longRunMapDay);
+                         const shakeoutDayIndex = (raceDayIndex - 1 + 7) % 7; 
+                         const shakeoutDay = DAYS_OF_WEEK[shakeoutDayIndex];
+                         mapWorkout(shakeoutDay, 'Shakeout');
+                    }
+
+                    plan.push({ week: w, weeklyVolume, longRun: lrDistance, dailyPlan: dailyPlan, isTaper, isRaceWeek, isPeak: w === buildWeeks + 1 });
+                }
+                
+                return { plan, userName, targetRaceName, targetDistanceKm, durationWeeks, peakMileage };
+            }
+        };
+
+        // --- 5. DOM INTERACTION AND EVENT HANDLERS ---
+        
+        function fillDaySelectors() {
+            const dayOptions = DAYS_OF_WEEK.map((day, index) => 
+                `<option value="${day}">${DAY_NAMES_TH[index]}</option>`
+            ).join('');
+            
+            document.getElementById('longRunDay').innerHTML = dayOptions;
+            document.getElementById('intervalDay').innerHTML = dayOptions;
+            document.getElementById('tempoDay').innerHTML = dayOptions;
+            
+            document.getElementById('longRunDay').value = 'Sunday';
+            document.getElementById('intervalDay').value = 'Tuesday';
+            document.getElementById('tempoDay').value = 'Thursday';
+        }
+
+        function updatePacePreview() {
+            const userAge = parseInt(document.getElementById('userAge').value) || 0;
+            const userRHR = parseInt(document.getElementById('userRHR').value) || 0;
+            const maxHR = HRCalculator.calculateMaxHR(userAge);
+            
+            document.getElementById('displayMaxHR').textContent = maxHR > 0 ? `${maxHR}` : 'N/A';
+            document.getElementById('displayRHR').textContent = userRHR > 0 ? `${userRHR}` : 'N/A';
+
+
+            const bmDistKm = parseFloat(document.getElementById('benchmarkDistanceKm').value) || 0;
+            const bmHours = parseInt(document.getElementById('bmHours').value) || 0;
+            const bmMinutes = parseInt(document.getElementById('bmMinutes').value) || 0;
+            const bmSeconds = parseInt(document.getElementById('bmSeconds').value) || 0;
+            
+            const targetDistKm = parseFloat(document.getElementById('targetDistanceKm').value) || 0;
+            const targetHours = parseInt(document.getElementById('targetHours').value) || 0;
+            const targetMinutes = parseInt(document.getElementById('targetMinutes').value) || 0;
+            const targetSeconds = parseInt(document.getElementById('targetSeconds').value) || 0;
+            
+            document.getElementById('displayUserNameHeader').textContent = `แผนซ้อมสำหรับ ${document.getElementById('userName').value.trim() || 'นักวิ่ง'}`;
+            
+            const bmPaceSecs = PaceCalculator.calculatePace(bmHours, bmMinutes, bmSeconds, bmDistKm);
+            const goalPaceSecs = PaceCalculator.calculatePace(targetHours, targetMinutes, targetSeconds, targetDistKm);
+            
+            // Use Karvonen calculation
+            const easyHRInfo = HRCalculator.getPaceHRInfo('easy', maxHR, userRHR);
+            const tempoHRInfo = HRCalculator.getPaceHRInfo('tempo', maxHR, userRHR);
+            const intervalHRInfo = HRCalculator.getPaceHRInfo('interval', maxHR, userRHR);
+            const goalHRInfo = HRCalculator.getPaceHRInfo('goal', maxHR, userRHR);
+
+            if (bmPaceSecs > 0) {
+                const paces = PaceCalculator.getTrainingPaces(bmPaceSecs);
+                document.getElementById('displayEasyPace').textContent = PaceCalculator.formatPace(paces.easy);
+                document.getElementById('displayTempoPace').textContent = PaceCalculator.formatPace(paces.marathon); 
+                document.getElementById('displayIntervalPace').textContent = PaceCalculator.formatPace(paces.interval); 
+            } else {
+                document.getElementById('displayEasyPace').textContent = '0:00';
+                document.getElementById('displayTempoPace').textContent = '0:00';
+                document.getElementById('displayIntervalPace').textContent = '0:00';
+            }
+            
+            // Update HR Displays
+            document.getElementById('displayEasyHR').textContent = easyHRInfo.hr;
+            document.getElementById('displayTempoHR').textContent = tempoHRInfo.hr;
+            document.getElementById('displayIntervalHR').textContent = intervalHRInfo.hr;
+            
+            if (goalPaceSecs > 0) {
+                document.getElementById('displayGoalPace').textContent = PaceCalculator.formatPace(goalPaceSecs);
+                document.getElementById('displayGoalHR').textContent = goalHRInfo.hr;
+            } else {
+                document.getElementById('displayGoalPace').textContent = '0:00';
+                document.getElementById('displayGoalHR').textContent = 'Target HR';
+            }
+            
+            checkAllDayConflicts(); 
+        }
+
+        function generateDayCheckboxes() {
+            const selector = document.getElementById('restDaySelector');
+            selector.innerHTML = DAYS_OF_WEEK.map((day, index) => {
+                const isDefaultRest = (day === 'Monday' || day === 'Friday');
+                return `
+                    <div class="flex items-center">
+                        <input type="checkbox" id="restDay${index}" name="restDay" value="${day}" class="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary" ${isDefaultRest ? 'checked' : ''}>
+                        <label for="restDay${index}" class="ml-2 text-sm text-gray-700">${DAY_NAMES_TH[index]}</label>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function checkAllDayConflicts() {
+            const longRunDay = document.getElementById('longRunDay').value;
+            const intervalDay = document.getElementById('intervalDay').value;
+            const tempoDay = document.getElementById('tempoDay').value;
+            const restDays = Array.from(document.querySelectorAll('input[name="restDay"]:checked')).map(cb => cb.value);
+            
+            const mandatoryDays = [longRunDay, intervalDay, tempoDay];
+            const uniqueDays = new Set(mandatoryDays);
+
+            let isConflict = false;
+            
+            const checkRestConflict = (dayId, warningId) => {
+                const day = document.getElementById(dayId).value;
+                const warningElement = document.getElementById(warningId);
+                const dayNameTH = DAY_NAMES_TH[DAYS_OF_WEEK.indexOf(day)];
+                
+                if (restDays.includes(day)) {
+                    warningElement.classList.remove('hidden');
+                    warningElement.textContent = `⚠️ วัน ${dayNameTH} เป็นวันพัก!`;
+                    isConflict = true;
+                } else if (warningElement.textContent.includes('วันพัก')) {
+                    warningElement.classList.add('hidden');
+                }
+            };
+
+            checkRestConflict('longRunDay', 'lrWarning');
+            checkRestConflict('intervalDay', 'intervalWarning');
+            checkRestConflict('tempoDay', 'tempoWarning');
+
+            const intervalWarning = document.getElementById('intervalWarning');
+            if (mandatoryDays.length !== uniqueDays.size) {
+                intervalWarning.classList.remove('hidden');
+                intervalWarning.textContent = '⚠️ วันซ้อมหลักซ้ำกัน! (Long, Interval, Tempo)';
+                isConflict = true;
+            } else if (!restDays.includes(intervalDay) && intervalWarning.textContent.includes('ซ้ำกัน')) {
+                 intervalWarning.classList.add('hidden');
+            }
+            
+            const submitButton = document.getElementById('submitButton'); 
+            const trainingDaysCount = DAYS_OF_WEEK.length - restDays.length;
+
+            if (isConflict || trainingDaysCount < 3) {
+                submitButton.disabled = true;
+                submitButton.classList.remove('bg-primary', 'soft-button');
+                submitButton.classList.add('bg-gray-400', 'shadow-none');
+                if(trainingDaysCount < 3) {
+                    submitButton.textContent = '❌ วันซ้อมน้อยเกินไป (ต้องการอย่างน้อย 3 วัน)';
+                } else {
+                    submitButton.textContent = '❌ โปรดแก้ไขความขัดแย้งของวันซ้อม';
+                }
+            } else {
+                submitButton.disabled = false;
+                submitButton.classList.add('bg-primary', 'soft-button');
+                submitButton.classList.remove('bg-gray-400', 'shadow-none');
+                submitButton.textContent = `สร้างโปรแกรมซ้อม ${document.getElementById('planDuration').value} สัปดาห์`;
+            }
+        }
+        
+        function renderVolumeGraph(plan, maxVolume) {
+            const graphContainer = document.getElementById('volumeGraph');
+            const graphOutput = document.getElementById('volumeGraphOutput');
+            const maxVolumeDisplay = document.getElementById('maxVolumeDisplay');
+            graphContainer.innerHTML = '';
+            
+            if (!plan || plan.length === 0 || maxVolume <= 0) {
+                graphOutput.classList.add('hidden');
+                return;
+            }
+
+            graphOutput.classList.remove('hidden');
+            maxVolumeDisplay.textContent = maxVolume;
+
+            const maxLongRunDist = Math.max(...plan.map(d => d.longRun));
+            
+            const barsHtml = [];
+            const barCount = plan.length;
+            const barWidthPercent = (100 / barCount) * 0.95; 
+            const points = [];
+
+            plan.forEach((weekData, index) => {
+                const volume = weekData.weeklyVolume;
+                const lrDistance = weekData.longRun;
+                const heightPercent = (volume / maxVolume) * 90; 
+                
+                let barColor = 'bg-primary';
+                let barLabel = `${weekData.week}: ${volume}กม.`;
+                
+                if (weekData.isRaceWeek) { barColor = 'bg-red-500'; barLabel = `🏁 Race`; } 
+                else if (weekData.isTaper) { barColor = 'bg-yellow-500'; barLabel = `🔻 Taper`; }
+                else if (weekData.week < barCount - 2 && ((weekData.week - 1) % 4) === 3) { barColor = 'bg-gray-400'; barLabel = `♻️ Cutback`; }
+                else if (weekData.isPeak) { barColor = 'bg-accent'; } 
+
+                const barHtml = `
+                    <div class="h-full flex flex-col justify-end items-center mx-1 group cursor-default relative" style="width: ${barWidthPercent}%;">
+                        <div class="text-xs font-bold mb-1 text-gray-700">${volume}</div>
+                        <div class="${barColor} rounded-t-lg w-full transition-all duration-300" style="height: ${heightPercent}%;">
+                        </div>
+                        <div class="text-xs mt-1 text-gray-600 font-semibold">${weekData.week}</div>
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-white bg-black/70 p-1 rounded hidden group-hover:block whitespace-nowrap z-30">${barLabel}</div>
+                    </div>
+                `;
+                barsHtml.push(barHtml);
+
+                const x = index * (100 / barCount) + (100 / barCount) / 2;
+                const y = 90 - ((lrDistance / maxLongRunDist) * 80);
+                points.push({ x, y, lr: lrDistance, week: weekData.week });
+            });
+            
+            graphContainer.innerHTML = barsHtml.join('');
+
+            // Build SVG for Long Run Line
+            let svgPathData = points.map((p, index) => 
+                `${index === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`
+            ).join(' ');
+
+            const svgHTML = `
+                <div class="absolute bottom-0 left-0 w-full h-full pointer-events-none">
+                    <svg class="h-full w-full absolute top-0 left-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <path d="${svgPathData}" fill="none" stroke="#F97316" stroke-width="0.8" />
+                        ${points.map(p => `
+                            <circle cx="${p.x}%" cy="${p.y}%" r="0.6" fill="#F97316" class="pointer-events-auto cursor-help" 
+                                title="LR Week ${p.week}: ${p.lr} กม." />
+                        `).join('')}
+                    </svg>
+                </div>
+            `;
+
+            graphContainer.closest('.relative').insertAdjacentHTML('beforeend', svgHTML);
+        }
+
+        function renderPlan({ plan, userName, targetRaceName, targetDistanceKm, durationWeeks, peakMileage }) {
+            if (!Array.isArray(plan) || plan.length === 0) {
+                document.getElementById('planOutput').innerHTML = '<div class="text-center text-red-500 py-10">❌ ไม่สามารถสร้างแผนได้: ข้อมูลแผนซ้อมว่างเปล่า กรุณาตรวจสอบข้อมูลนำเข้า</div>';
+                renderVolumeGraph(null, 0); 
+                return;
+            }
+            
+            const output = document.getElementById('planOutput');
+            
+            // 1. Render Graph
+            renderVolumeGraph(plan, peakMileage);
+
+            // 2. Render Table
+            let html = `
+                <div class="mb-4 p-4 rounded-xl bg-primary-light border-l-4 border-primary card-shadow">
+                    <h2 class="text-xl font-bold text-gray-800">🗓️ แผนซ้อม ${durationWeeks} สัปดาห์สำหรับ **${userName}**</h2>
+                    <p class="text-sm text-gray-700">เป้าหมาย: **${targetRaceName}** (${targetDistanceKm} กม.)</p>
+                </div>
+            `;
+
+            html += `<div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 clean-table">
+                    <thead class="bg-gray-100 sticky top-0">
+                        <tr>
+                            <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase sticky-col bg-gray-100 z-20 w-[5%]">สัปดาห์</th>
+                            <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase w-[10%]">Volume</th>
+                            ${DAY_NAMES_TH.map(day => `<th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase w-[10%]">${day.substring(0, 2)}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+            `;
+
+            plan.forEach(weekData => {
+                const dailyPlan = weekData.dailyPlan || []; 
+                const volumePercentage = (weekData.weeklyVolume / peakMileage) * 100;
+                
+                let rowClass = 'bg-white';
+                if (weekData.isRaceWeek) {
+                     rowClass = 'race-week';
+                } else if (weekData.isTaper) {
+                    rowClass = 'taper-week';
+                } else if (weekData.isPeak) {
+                    rowClass = 'peak-week';
+                } else if (weekData.week < durationWeeks - 2 && ((weekData.week - 1) % 4) === 3) { 
+                     rowClass = 'bg-gray-50/70'; 
+                }
+                
+                const weekSummary = weekData.isRaceWeek ? '🏁' : weekData.isTaper ? '🔻' : (weekData.week < durationWeeks - 2 && ((weekData.week - 1) % 4) === 3) ? '♻️' : weekData.isPeak ? '⬆️' : '';
+
+                html += `<tr class="${rowClass}">
+                    <td class="px-2 py-3 font-bold text-gray-800 sticky-col ${rowClass} z-10">${weekData.week} ${weekSummary}</td>
+                    <td class="px-2 py-3 font-bold text-primary w-[10%]">
+                        ${weekData.weeklyVolume} กม.
+                        <div class="w-full h-1 bg-gray-200 rounded-full mt-1">
+                            <div class="h-1 bg-primary rounded-full" style="width: ${volumePercentage}%;"></div>
+                        </div>
+                    </td>
+                    ${dailyPlan.map(daily => { 
+                        const workout = daily.workout;
+                        if (!workout || !workout.zone) { 
+                            return `<td class="px-2 py-3 bg-gray-100"><p class="text-gray-500">N/A</p></td>`;
+                        }
+
+                        const paceFormatted = PaceCalculator.formatPace(workout.pace);
+                        const paceColor = workout.zone.color; 
+                        const cellBg = workout.type === 'Rest' ? 'bg-gray-100' : workout.type === 'Long Run' ? 'bg-green-50/70' : workout.type === 'Race Day' ? 'bg-red-100/70' : '';
+
+                        return `<td class="px-2 py-3 ${cellBg} w-[10%]">
+                            <p class="font-bold text-gray-800 leading-tight">${workout.type.replace('Cross Train', 'Cross').replace('Shakeout', 'Shake')}</p>
+                            <p class="text-gray-600 leading-tight">${workout.baseDescription.substring(0, 30)}...</p>
+                            ${workout.type !== 'Rest' && workout.type !== 'Cross Train' ? `<p class="font-bold ${paceColor} mt-1 leading-tight">${paceFormatted}</p>` : ''}
+                            ${workout.type !== 'Rest' ? `<p class="text-gray-500 text-xs leading-tight">${workout.zone.hr.replace(' MaxHR', '')}</p>` : ''}
+                        </td>`;
+                    }).join('')}
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            output.innerHTML = html;
+        }
+
+
+        // --- Initialization and Event Listener Setup ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fillDaySelectors();
+            generateDayCheckboxes(); 
+            updatePacePreview(); 
+
+            // Include userRHR in paceInputs for immediate HR update
+            const paceInputs = document.querySelectorAll('#targetHours, #targetMinutes, #targetSeconds, #targetDistanceKm, #benchmarkDistanceKm, #bmHours, #bmMinutes, #bmSeconds, #userName, #experienceLevel, #currentWeeklyMileage, #planDuration, #userAge, #userRHR');
+            paceInputs.forEach(element => {
+                element.addEventListener('input', updatePacePreview);
+            });
+            
+            const daySelectors = document.querySelectorAll('#longRunDay, #intervalDay, #tempoDay, input[name="restDay"]');
+            daySelectors.forEach(element => {
+                element.addEventListener('change', checkAllDayConflicts);
+            });
+
+            // --- Submit Handler ---
+            document.getElementById('planForm').addEventListener('submit', function(e) {
+                e.preventDefault(); 
+                
+                // 1. Gather Input
+                const userName = document.getElementById('userName').value.trim() || 'นักวิ่งมือใหม่';
+                const targetRaceName = document.getElementById('targetRaceName').value.trim() || 'งานวิ่งเป้าหมาย';
+                const userAge = parseInt(document.getElementById('userAge').value) || 0;
+                const userRHR = parseInt(document.getElementById('userRHR').value) || 0;
+                const maxHR = HRCalculator.calculateMaxHR(userAge);
+                const currentMileage = parseFloat(document.getElementById('currentWeeklyMileage').value) || 0;
+                const planDuration = document.getElementById('planDuration').value;
+                const experienceLevel = document.getElementById('experienceLevel').value;
+                
+                const targetDistKm = parseFloat(document.getElementById('targetDistanceKm').value) || 0;
+                const targetHours = parseInt(document.getElementById('targetHours').value) || 0;
+                const targetMinutes = parseInt(document.getElementById('targetMinutes').value) || 0;
+                const targetSeconds = parseInt(document.getElementById('targetSeconds').value) || 0;
+                
+                const bmDistKm = parseFloat(document.getElementById('benchmarkDistanceKm').value) || 0;
+                const bmHours = parseInt(document.getElementById('bmHours').value) || 0;
+                const bmMinutes = parseInt(document.getElementById('bmMinutes').value) || 0;
+                const bmSeconds = parseInt(document.getElementById('bmSeconds').value) || 0;
+
+                const longRunDay = document.getElementById('longRunDay').value;
+                const intervalDay = document.getElementById('intervalDay').value;
+                const tempoDay = document.getElementById('tempoDay').value;
+                const restDays = Array.from(document.querySelectorAll('input[name="restDay"]:checked')).map(cb => cb.value);
+                const trainingDaysCount = DAYS_OF_WEEK.length - restDays.length;
+
+                // 2. Validate essential inputs
+                const targetPaceSecs = PaceCalculator.calculatePace(targetHours, targetMinutes, targetSeconds, targetDistKm);
+                const bmPaceSecs = PaceCalculator.calculatePace(bmHours, bmMinutes, bmSeconds, bmDistKm);
+
+                if (document.getElementById('submitButton').disabled || trainingDaysCount < 3) {
+                    alert('🚨 ข้อมูลไม่สมบูรณ์: โปรดตรวจสอบความขัดแย้งของวันซ้อม หรือปริมาณวันซ้อม (ต้องมีอย่างน้อย 3 วัน)');
+                    return;
+                }
+                
+                if (currentMileage <= 0 || targetPaceSecs <= 0 || bmPaceSecs <= 0 || maxHR <= 100 || userRHR <= 30 || maxHR <= userRHR) {
+                     alert('🚨 ข้อมูลไม่สมบูรณ์: โปรดระบุข้อมูลพื้นฐานให้ครบถ้วนและถูกต้อง (ปริมาณวิ่ง, Pace, อายุ, และ RHR)');
+                     return;
+                }
+                
+                // 3. Generate Plan
+                const result = PlanGenerator.generatePlanStructure(
+                    currentMileage, 
+                    targetDistKm, 
+                    targetPaceSecs, 
+                    bmPaceSecs, 
+                    trainingDaysCount, 
+                    restDays, 
+                    longRunDay,
+                    intervalDay,
+                    tempoDay,
+                    planDuration,
+                    userName,
+                    targetRaceName,
+                    experienceLevel,
+                    maxHR,
+                    userRHR // New parameter
+                );
+                
+                // 4. Render Output
+                renderPlan(result);
+            });
+        });
+    </script>
+
+</body>
+</html>
