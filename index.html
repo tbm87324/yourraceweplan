@@ -2,12 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes"> 
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="#RacePlan">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>#yourraceweplan</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
@@ -50,7 +45,8 @@
             transition: all 0.2s;
         }
         .input-style:focus {
-            border-color: #8b5cf6 !important; /* primary */
+            border-color: #8b5cf6 !important;
+            /* primary */
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3) !important;
             outline: none;
         }
@@ -66,7 +62,7 @@
             border-bottom: 1px solid #e5e7eb;
             padding: 8px 6px; 
             white-space: normal;
-            font-size: 0.8rem; 
+            font-size: 0.8rem;
         }
         .clean-table th:last-child, .clean-table td:last-child { border-right: none; }
         .clean-table th { border-top: 1px solid #e5e7eb; background-color: #f3f4f6; }
@@ -94,6 +90,30 @@
             box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.7), 0 4px 6px -4px rgba(139, 92, 246, 0.7);
             transform: translateY(-1px);
         }
+
+        /* =========== ✅ MOBILE OPTIMIZATIONS FOR PORTRAIT MODE (NEW) =========== */
+        /* ทำให้ตารางสามารถเลื่อนในแนวนอนได้บนหน้าจอเล็ก */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        /* ปรับขนาดฟอนต์/Padding/ความกว้างคอลัมน์สำหรับมือถือ */
+        @media (max-width: 640px) {
+            .clean-table th, .clean-table td {
+                padding: 6px 4px; 
+                font-size: 0.7rem; 
+                white-space: nowrap; 
+            }
+            .pace-details { 
+                font-size: 0.6rem;
+                display: block; /* ทำให้ Pace และ HR แยกบรรทัดกัน */
+            }
+            .clean-table th:nth-child(2), .clean-table td:nth-child(2) { 
+                 min-width: 70px; /* คอลัมน์ Volume */
+            }
+        }
+        /* ====================================================================== */
     </style>
 </head>
 <body class="bg-bg-page p-4 sm:p-8">
@@ -220,10 +240,10 @@
                         <div class="mt-4 pt-4 border-t border-gray-300">
                             <label class="block text-sm font-medium text-gray-700 mb-2">วันพัก/พักฟื้น (Rest Day)</label>
                             <div id="restDaySelector" class="grid grid-cols-4 gap-2 text-sm">
-                                </div>
+                            </div>
                         </div>
                     </fieldset>
-                    
+              
                     <div class="p-4 rounded-xl bg-accent-light border-l-4 border-accent card-shadow">
                         <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -287,7 +307,6 @@
         // --- 1. CONSTANTS ---
         const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const DAY_NAMES_TH = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์'];
-        
         // HR Zone Definitions (Percentage of Heart Rate Reserve - HRR)
         // Karvonen Formula uses % of HRR (MaxHR - RHR)
         const HR_ZONE_DEFS = {
@@ -296,10 +315,9 @@
             'marathon': { min: 0.70, max: 0.80, color: 'pace-marathon' }, // Z3 Lower (70-80% HRR)
             'tempo': { min: 0.75, max: 0.82, color: 'pace-tempo' },       // Z3 Upper (75-82% HRR)
             'interval': { min: 0.82, max: 0.92, color: 'pace-interval' }, // Z4/Z5 (82-92% HRR)
-            'goal': { min: 0.88, max: 0.95, color: 'pace-goal' },         // Race Day (88-95% HRR)
+            'goal': { min: 0.88, max: 0.95, color: 'pace-goal' },      // Race Day (88-95% HRR)
             'rest': { min: 0, max: 0, color: 'text-gray-500' },
         };
-
         // --- 2. HR CALCULATOR (Using Karvonen Formula) ---
         const HRCalculator = {
             calculateMaxHR: (age) => {
@@ -334,7 +352,6 @@
                 else if (paceType === 'interval' || paceType === 'goal') { zoneName = 'Z4/5'; }
                 
                 const hrRange = `${zoneName} (${minHR}-${maxHRBPM} BPM)`;
-                
                 return { 
                     hr: hrRange, 
                     color: zoneDef.color,
@@ -343,8 +360,6 @@
                 };
             }
         };
-
-
         // --- 3. PACE CALCULATOR (Same as previous version) ---
         const PaceCalculator = {
             calculatePace: (h, m, s, distKm) => {
@@ -364,8 +379,7 @@
                 const easyFactor = 1.30;
                 const marathonFactor = 1.15; 
                 const tempoFactor = 1.05;
-                const intervalFactor = 0.95; 
-
+                const intervalFactor = 0.95;
                 return {
                     easy: bmPaceSecs * easyFactor,
                     marathon: bmPaceSecs * marathonFactor,
@@ -374,45 +388,42 @@
                 };
             }
         };
-
         // --- 4. PLAN GENERATOR CORE LOGIC (Modified to pass RHR) ---
         const PlanGenerator = {
             calculateMaxLongRun: (targetDistanceKm, experienceLevel) => {
                 if (targetDistanceKm <= 10) return 10;
                 if (targetDistanceKm <= 21.1) return Math.min(25, targetDistanceKm * 1.25);
                 
-                let maxLongRunFactor = 0.7; 
+                let maxLongRunFactor = 0.7;
                 if (experienceLevel === 'Intermediate') {
                     maxLongRunFactor = 0.8;
                 } else if (experienceLevel === 'Advanced') {
                     maxLongRunFactor = 0.9;
                 }
-                return Math.round(Math.min(targetDistanceKm * maxLongRunFactor, 42)); 
+                return Math.round(Math.min(targetDistanceKm * maxLongRunFactor, 42));
             },
 
             calculateVolumeProgression: (currentMileage, targetDistanceKm, durationWeeks, buildWeeks) => {
                 const taperWeeks = 3;
                 const targetVolumeFactor = targetDistanceKm <= 21.1 ? 2.5 : 1.5;
-                const requiredPeak = Math.max(currentMileage * 1.5, targetDistanceKm * targetVolumeFactor); 
+                const requiredPeak = Math.max(currentMileage * 1.5, targetDistanceKm * targetVolumeFactor);
                 const volumeIncrease = (requiredPeak - currentMileage) / buildWeeks;
                 
                 let volumes = [currentMileage];
                 let currentVolume = currentMileage;
-                
                 for (let w = 1; w <= durationWeeks; w++) {
                     let nextVolume = currentVolume;
-
                     if (w <= buildWeeks) {
                         if (((w - 1) % 4) === 3) { 
-                            nextVolume *= 0.8; 
+                            nextVolume *= 0.8;
                         } else {
-                            nextVolume += volumeIncrease; 
+                            nextVolume += volumeIncrease;
                         }
                     } else if (w >= durationWeeks - taperWeeks + 1) {
-                        if (w === durationWeeks - 2) nextVolume = requiredPeak * 0.7; 
-                        else if (w === durationWeeks - 1) nextVolume = requiredPeak * 0.5; 
+                        if (w === durationWeeks - 2) nextVolume = requiredPeak * 0.7;
+                        else if (w === durationWeeks - 1) nextVolume = requiredPeak * 0.5;
                         else if (w === durationWeeks) nextVolume = Math.min(requiredPeak * 0.2, 10); 
-                        else nextVolume = requiredPeak * 0.8; 
+                        else nextVolume = requiredPeak * 0.8;
                     } else if (w === buildWeeks + 1 && buildWeeks < durationWeeks - taperWeeks) {
                         nextVolume = requiredPeak;
                     }
@@ -428,8 +439,7 @@
 
                 distance = Math.round(weeklyVolume * 0.15); 
                 distance = Math.min(distance, 12); 
-                distance = Math.max(3, distance); 
-
+                distance = Math.max(3, distance);
                 switch (type) {
                     case 'Interval':
                         pace = paces.interval;
@@ -471,12 +481,10 @@
                 const durationWeeks = parseInt(planDurationStr);
                 const taperWeeks = 3;
                 const buildWeeks = durationWeeks - taperWeeks; 
-                const taperStartWeek = durationWeeks - taperWeeks + 1; 
-                const targetRaceType = targetDistanceKm >= 40 ? 'Long' : 'Short'; 
-
+                const taperStartWeek = durationWeeks - taperWeeks + 1;
+                const targetRaceType = targetDistanceKm >= 40 ? 'Long' : 'Short';
                 const { progression: weeklyVolumeProgression, peak: peakMileage } = PlanGenerator.calculateVolumeProgression(currentMileage, targetDistanceKm, durationWeeks, buildWeeks);
                 const maxLongRun = PlanGenerator.calculateMaxLongRun(targetDistanceKm, experienceLevel);
-
                 const weeklyProgression = [];
                 const lrProgression = [];
                 
@@ -486,24 +494,22 @@
                     const isRaceWeek = (w === durationWeeks);
                     const isCutback = (((w - 1) % 4) === 3) && (w < taperStartWeek);
 
-                    weeklyProgression.push(Math.max(volume, 5)); 
-
+                    weeklyProgression.push(Math.max(volume, 5));
                     let lrDist = Math.round(volume * 0.3); 
                     if (lrDist > maxLongRun) lrDist = maxLongRun;
-
                     if (isRaceWeek) {
-                        lrDist = 3; 
+                        lrDist = 3;
                     } else if (isTaper) {
                         if (w === durationWeeks - 2) lrDist = Math.round(maxLongRun * 0.5);
                         else if (w === durationWeeks - 1) lrDist = Math.round(maxLongRun * 0.25);
-                        else lrDist = Math.round(maxLongRun * 0.7); 
+                        else lrDist = Math.round(maxLongRun * 0.7);
                     } else if (isCutback) {
-                        const previousVolumeIndex = w - 4; 
+                        const previousVolumeIndex = w - 4;
                         const previousVolume = previousVolumeIndex >= 0 ? weeklyVolumeProgression[previousVolumeIndex] : currentMileage;
-                        lrDist = Math.round(previousVolume * 0.3 * 0.7); 
+                        lrDist = Math.round(previousVolume * 0.3 * 0.7);
                     }
                     
-                    lrProgression.push(Math.max(lrDist, 3)); 
+                    lrProgression.push(Math.max(lrDist, 3));
                 }
 
                 const plan = [];
@@ -524,7 +530,6 @@
                         distance: lrDistance, 
                         baseDescription: `${lrDistance} กม. (${isTaper ? 'Easy' : (targetRaceType === 'Long' && w > 4) ? 'Progression' : 'Easy Run'})` 
                     };
-                    
                     if (isRaceWeek) {
                         requiredWorkouts.push({ priority: 0, type: 'Race Day', pace: targetPaceSecs, zone: HRCalculator.getPaceHRInfo('goal', maxHR, rhr), baseDescription: `แข่งจริง ${targetRaceName} (${targetDistanceKm} กม.)`, distance: targetDistanceKm });
                         const shakeoutDetails = PlanGenerator.calculateWorkoutDetails('Recovery', weeklyVolume, bmPaceSecs, maxHR, rhr);
@@ -537,33 +542,41 @@
                         ];
                         const easyDetails = PlanGenerator.calculateWorkoutDetails('Easy', weeklyVolume, bmPaceSecs, maxHR, rhr);
                         requiredWorkouts.push({ priority: 2, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: `${Math.min(5, easyDetails.distance)} กม. Easy`, distance: Math.min(5, easyDetails.distance) });
-
                     } else {
                         const intervalDetails = PlanGenerator.calculateWorkoutDetails('Interval', weeklyVolume, bmPaceSecs, maxHR, rhr);
                         const tempoDetails = PlanGenerator.calculateWorkoutDetails('Tempo', weeklyVolume, bmPaceSecs, maxHR, rhr);
                         const easyDetails = PlanGenerator.calculateWorkoutDetails('Easy', weeklyVolume, bmPaceSecs, maxHR, rhr);
                         
-                        requiredWorkouts = [ 
-                            longRunWorkout, 
-                            { priority: 1, type: 'Interval', pace: intervalDetails.pace, zone: intervalDetails.zone, baseDescription: intervalDetails.baseDescription }, 
-                            { priority: 2, type: 'Tempo', pace: tempoDetails.pace, zone: tempoDetails.zone, baseDescription: tempoDetails.baseDescription }, 
-                            { priority: 3, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: easyDetails.baseDescription, distance: easyDetails.distance }, 
+                        requiredWorkouts = [
+                            longRunWorkout,
+                            { priority: 1, type: 'Interval', pace: intervalDetails.pace, zone: intervalDetails.zone, baseDescription: intervalDetails.baseDescription },
+                            { priority: 2, type: 'Tempo', pace: tempoDetails.pace, zone: tempoDetails.zone, baseDescription: tempoDetails.baseDescription },
+                            { priority: 3, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: easyDetails.baseDescription },
                         ];
-                        
-                        if (trainingDaysCount > 4) { requiredWorkouts.push({ priority: 4, type: 'Easy', pace: easyDetails.pace, zone: easyDetails.zone, baseDescription: easyDetails.baseDescription, distance: easyDetails.distance }); }
+
+                        // Add extra workouts for higher volume or advanced plans
+                        const extraWorkouts = trainingDaysCount - 4;
+                        if (extraWorkouts >= 1) {
+                            const recoveryDetails = PlanGenerator.calculateWorkoutDetails('Recovery', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                            requiredWorkouts.push({ priority: 4, type: 'Recovery', pace: recoveryDetails.pace, zone: recoveryDetails.zone, baseDescription: recoveryDetails.baseDescription });
+                        }
+                        if (extraWorkouts >= 2) {
+                            const crossTrainDetails = PlanGenerator.calculateWorkoutDetails('Cross Train', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                            requiredWorkouts.push({ priority: 5, type: 'Cross Train', pace: crossTrainDetails.pace, zone: crossTrainDetails.zone, baseDescription: crossTrainDetails.baseDescription });
+                        }
+                        if (extraWorkouts >= 3) {
+                            const easyDetails2 = PlanGenerator.calculateWorkoutDetails('Easy', weeklyVolume, bmPaceSecs, maxHR, rhr);
+                            requiredWorkouts.push({ priority: 6, type: 'Easy', pace: easyDetails2.pace, zone: easyDetails2.zone, baseDescription: easyDetails2.baseDescription });
+                        }
                     }
 
-                    if (trainingDaysCount > requiredWorkouts.length) { 
-                        requiredWorkouts.push(PlanGenerator.calculateWorkoutDetails('Cross Train', weeklyVolume, bmPaceSecs, maxHR, rhr)); 
-                    }
-                    
-                    requiredWorkouts.sort((a, b) => a.priority - b.priority);
-                    let weeklyWorkouts = requiredWorkouts.slice(0, trainingDaysCount); 
-                    
+                    // Sort required workouts by priority (Long Run first, then Interval, Tempo, Easy...)
+                    let weeklyWorkouts = requiredWorkouts.sort((a, b) => a.priority - b.priority);
+
+                    // Distribute workouts to days
                     let dailyPlan = DAYS_OF_WEEK.map(day => ({ day, workout: null }));
-                    
-                    const longRunMapDay = isRaceWeek ? DAYS_OF_WEEK.find(d => d === longRunDay) || 'Sunday' : longRunDay; 
-                    
+                    const longRunMapDay = isRaceWeek ? DAYS_OF_WEEK.find(d => d === longRunDay) || 'Sunday' : longRunDay;
+
                     const mapWorkout = (day, workoutType) => {
                         const index = dailyPlan.findIndex(d => d.day === day);
                         const workout = weeklyWorkouts.find(w => w.type === workoutType || (workoutType === 'Long Run' && w.type === 'Long Run'));
@@ -578,46 +591,43 @@
                     mapWorkout(longRunMapDay, isRaceWeek ? 'Race Day' : 'Long Run');
                     mapWorkout(intervalDay, 'Interval');
                     mapWorkout(tempoDay, 'Tempo');
-                    
+
+                    // Map remaining workouts (Easy, Recovery, Cross Train) to free training days
                     for (let i = 0; i < dailyPlan.length; i++) {
                         const day = dailyPlan[i].day;
                         if (!dailyPlan[i].workout && !restDays.includes(day) && weeklyWorkouts.length > 0) {
                             dailyPlan[i].workout = weeklyWorkouts.shift();
                         }
                     }
-
+                    
+                    // Fill in Rest days
                     const restWorkoutTemplate = { type: 'Rest', baseDescription: 'พักผ่อน', pace: 0, zone: HRCalculator.getPaceHRInfo('rest', maxHR, rhr) };
                     dailyPlan.forEach(d => {
                         if (restDays.includes(d.day) && !d.workout) {
-                            d.workout = {...restWorkoutTemplate}; 
+                            d.workout = {...restWorkoutTemplate};
                         }
                     });
 
+                    // Special placement for Shakeout (day before race)
                     if (isRaceWeek) {
-                         const raceDayIndex = DAYS_OF_WEEK.indexOf(longRunMapDay);
-                         const shakeoutDayIndex = (raceDayIndex - 1 + 7) % 7; 
-                         const shakeoutDay = DAYS_OF_WEEK[shakeoutDayIndex];
-                         mapWorkout(shakeoutDay, 'Shakeout');
+                        const raceDayIndex = DAYS_OF_WEEK.indexOf(longRunMapDay);
+                        const shakeoutDayIndex = (raceDayIndex - 1 + 7) % 7;
+                        const shakeoutDay = DAYS_OF_WEEK[shakeoutDayIndex];
+                        mapWorkout(shakeoutDay, 'Shakeout');
                     }
 
                     plan.push({ week: w, weeklyVolume, longRun: lrDistance, dailyPlan: dailyPlan, isTaper, isRaceWeek, isPeak: w === buildWeeks + 1 });
                 }
-                
+
                 return { plan, userName, targetRaceName, targetDistanceKm, durationWeeks, peakMileage };
             }
         };
-
         // --- 5. DOM INTERACTION AND EVENT HANDLERS ---
-        
         function fillDaySelectors() {
-            const dayOptions = DAYS_OF_WEEK.map((day, index) => 
-                `<option value="${day}">${DAY_NAMES_TH[index]}</option>`
-            ).join('');
-            
+            const dayOptions = DAYS_OF_WEEK.map((day, index) => `<option value="${day}">${DAY_NAMES_TH[index]}</option>` ).join('');
             document.getElementById('longRunDay').innerHTML = dayOptions;
             document.getElementById('intervalDay').innerHTML = dayOptions;
             document.getElementById('tempoDay').innerHTML = dayOptions;
-            
             document.getElementById('longRunDay').value = 'Sunday';
             document.getElementById('intervalDay').value = 'Tuesday';
             document.getElementById('tempoDay').value = 'Thursday';
@@ -627,27 +637,22 @@
             const userAge = parseInt(document.getElementById('userAge').value) || 0;
             const userRHR = parseInt(document.getElementById('userRHR').value) || 0;
             const maxHR = HRCalculator.calculateMaxHR(userAge);
-            
             document.getElementById('displayMaxHR').textContent = maxHR > 0 ? `${maxHR}` : 'N/A';
             document.getElementById('displayRHR').textContent = userRHR > 0 ? `${userRHR}` : 'N/A';
-
-
+            
             const bmDistKm = parseFloat(document.getElementById('benchmarkDistanceKm').value) || 0;
             const bmHours = parseInt(document.getElementById('bmHours').value) || 0;
             const bmMinutes = parseInt(document.getElementById('bmMinutes').value) || 0;
             const bmSeconds = parseInt(document.getElementById('bmSeconds').value) || 0;
-            
             const targetDistKm = parseFloat(document.getElementById('targetDistanceKm').value) || 0;
             const targetHours = parseInt(document.getElementById('targetHours').value) || 0;
             const targetMinutes = parseInt(document.getElementById('targetMinutes').value) || 0;
             const targetSeconds = parseInt(document.getElementById('targetSeconds').value) || 0;
             
-            document.getElementById('displayUserNameHeader').textContent = `แผนซ้อมสำหรับ ${document.getElementById('userName').value.trim() || 'นักวิ่ง'}`;
-            
             const bmPaceSecs = PaceCalculator.calculatePace(bmHours, bmMinutes, bmSeconds, bmDistKm);
             const goalPaceSecs = PaceCalculator.calculatePace(targetHours, targetMinutes, targetSeconds, targetDistKm);
-            
-            // Use Karvonen calculation
+
+            // Calculate HR Info for display
             const easyHRInfo = HRCalculator.getPaceHRInfo('easy', maxHR, userRHR);
             const tempoHRInfo = HRCalculator.getPaceHRInfo('tempo', maxHR, userRHR);
             const intervalHRInfo = HRCalculator.getPaceHRInfo('interval', maxHR, userRHR);
@@ -656,19 +661,19 @@
             if (bmPaceSecs > 0) {
                 const paces = PaceCalculator.getTrainingPaces(bmPaceSecs);
                 document.getElementById('displayEasyPace').textContent = PaceCalculator.formatPace(paces.easy);
-                document.getElementById('displayTempoPace').textContent = PaceCalculator.formatPace(paces.marathon); 
-                document.getElementById('displayIntervalPace').textContent = PaceCalculator.formatPace(paces.interval); 
+                document.getElementById('displayTempoPace').textContent = PaceCalculator.formatPace(paces.marathon);
+                document.getElementById('displayIntervalPace').textContent = PaceCalculator.formatPace(paces.interval);
             } else {
                 document.getElementById('displayEasyPace').textContent = '0:00';
                 document.getElementById('displayTempoPace').textContent = '0:00';
                 document.getElementById('displayIntervalPace').textContent = '0:00';
             }
-            
+
             // Update HR Displays
             document.getElementById('displayEasyHR').textContent = easyHRInfo.hr;
             document.getElementById('displayTempoHR').textContent = tempoHRInfo.hr;
             document.getElementById('displayIntervalHR').textContent = intervalHRInfo.hr;
-            
+
             if (goalPaceSecs > 0) {
                 document.getElementById('displayGoalPace').textContent = PaceCalculator.formatPace(goalPaceSecs);
                 document.getElementById('displayGoalHR').textContent = goalHRInfo.hr;
@@ -676,8 +681,8 @@
                 document.getElementById('displayGoalPace').textContent = '0:00';
                 document.getElementById('displayGoalHR').textContent = 'Target HR';
             }
-            
-            checkAllDayConflicts(); 
+
+            checkAllDayConflicts();
         }
 
         function generateDayCheckboxes() {
@@ -701,14 +706,13 @@
             
             const mandatoryDays = [longRunDay, intervalDay, tempoDay];
             const uniqueDays = new Set(mandatoryDays);
-
             let isConflict = false;
-            
+
+            // Check if mandatory days conflict with rest days
             const checkRestConflict = (dayId, warningId) => {
                 const day = document.getElementById(dayId).value;
                 const warningElement = document.getElementById(warningId);
                 const dayNameTH = DAY_NAMES_TH[DAYS_OF_WEEK.indexOf(day)];
-                
                 if (restDays.includes(day)) {
                     warningElement.classList.remove('hidden');
                     warningElement.textContent = `⚠️ วัน ${dayNameTH} เป็นวันพัก!`;
@@ -722,74 +726,68 @@
             checkRestConflict('intervalDay', 'intervalWarning');
             checkRestConflict('tempoDay', 'tempoWarning');
 
+            // Check if mandatory days conflict with each other
             const intervalWarning = document.getElementById('intervalWarning');
             if (mandatoryDays.length !== uniqueDays.size) {
                 intervalWarning.classList.remove('hidden');
                 intervalWarning.textContent = '⚠️ วันซ้อมหลักซ้ำกัน! (Long, Interval, Tempo)';
                 isConflict = true;
             } else if (!restDays.includes(intervalDay) && intervalWarning.textContent.includes('ซ้ำกัน')) {
-                 intervalWarning.classList.add('hidden');
+                intervalWarning.classList.add('hidden');
             }
-            
-            const submitButton = document.getElementById('submitButton'); 
-            const trainingDaysCount = DAYS_OF_WEEK.length - restDays.length;
 
+            const submitButton = document.getElementById('submitButton');
+            const trainingDaysCount = DAYS_OF_WEEK.length - restDays.length;
+            
             if (isConflict || trainingDaysCount < 3) {
                 submitButton.disabled = true;
-                submitButton.classList.remove('bg-primary', 'soft-button');
-                submitButton.classList.add('bg-gray-400', 'shadow-none');
-                if(trainingDaysCount < 3) {
-                    submitButton.textContent = '❌ วันซ้อมน้อยเกินไป (ต้องการอย่างน้อย 3 วัน)';
-                } else {
-                    submitButton.textContent = '❌ โปรดแก้ไขความขัดแย้งของวันซ้อม';
-                }
+                submitButton.textContent = trainingDaysCount < 3 ? `🚨 เลือกวันซ้อมอย่างน้อย 3 วัน` : `🚨 แก้ไขความขัดแย้งของวันซ้อม`;
+                submitButton.classList.replace('bg-primary', 'bg-red-500');
+                submitButton.classList.remove('soft-button');
             } else {
                 submitButton.disabled = false;
-                submitButton.classList.add('bg-primary', 'soft-button');
-                submitButton.classList.remove('bg-gray-400', 'shadow-none');
-                submitButton.textContent = `สร้างโปรแกรมซ้อม ${document.getElementById('planDuration').value} สัปดาห์`;
+                submitButton.textContent = `🚀 สร้างโปรแกรมซ้อม ${document.getElementById('planDuration').value} สัปดาห์`;
+                submitButton.classList.replace('bg-red-500', 'bg-primary');
+                submitButton.classList.add('soft-button');
             }
         }
-        
+
         function renderVolumeGraph(plan, maxVolume) {
             const graphContainer = document.getElementById('volumeGraph');
-            const graphOutput = document.getElementById('volumeGraphOutput');
-            const maxVolumeDisplay = document.getElementById('maxVolumeDisplay');
-            graphContainer.innerHTML = '';
-            
-            if (!plan || plan.length === 0 || maxVolume <= 0) {
-                graphOutput.classList.add('hidden');
-                return;
-            }
+            graphContainer.innerHTML = ''; 
+            document.getElementById('volumeGraphOutput').classList.remove('hidden');
+            document.getElementById('maxVolumeDisplay').textContent = `${maxVolume}`;
 
-            graphOutput.classList.remove('hidden');
-            maxVolumeDisplay.textContent = maxVolume;
-
-            const maxLongRunDist = Math.max(...plan.map(d => d.longRun));
-            
-            const barsHtml = [];
             const barCount = plan.length;
-            const barWidthPercent = (100 / barCount) * 0.95; 
+            const barsHtml = [];
+            const maxLongRunDist = Math.max(...plan.map(p => p.longRun));
+            const barWidthPercent = (100 / barCount) * 0.95;
             const points = [];
 
             plan.forEach((weekData, index) => {
                 const volume = weekData.weeklyVolume;
                 const lrDistance = weekData.longRun;
-                const heightPercent = (volume / maxVolume) * 90; 
-                
+                const heightPercent = (volume / maxVolume) * 90;
                 let barColor = 'bg-primary';
                 let barLabel = `${weekData.week}: ${volume}กม.`;
                 
-                if (weekData.isRaceWeek) { barColor = 'bg-red-500'; barLabel = `🏁 Race`; } 
-                else if (weekData.isTaper) { barColor = 'bg-yellow-500'; barLabel = `🔻 Taper`; }
-                else if (weekData.week < barCount - 2 && ((weekData.week - 1) % 4) === 3) { barColor = 'bg-gray-400'; barLabel = `♻️ Cutback`; }
-                else if (weekData.isPeak) { barColor = 'bg-accent'; } 
+                if (weekData.isRaceWeek) {
+                    barColor = 'bg-red-500';
+                    barLabel = `🏁 Race`;
+                } else if (weekData.isTaper) {
+                    barColor = 'bg-yellow-500';
+                    barLabel = `🔻 Taper`;
+                } else if (weekData.week < barCount - 2 && ((weekData.week - 1) % 4) === 3) {
+                    barColor = 'bg-gray-400';
+                    barLabel = `♻️ Cutback`;
+                } else if (weekData.isPeak) {
+                    barColor = 'bg-accent';
+                }
 
                 const barHtml = `
-                    <div class="h-full flex flex-col justify-end items-center mx-1 group cursor-default relative" style="width: ${barWidthPercent}%;">
+                    <div class="h-full flex flex-col justify-end items-center mx-1 group cursor-default relative" style="width: ${barWidthPercent}%;"> 
                         <div class="text-xs font-bold mb-1 text-gray-700">${volume}</div>
-                        <div class="${barColor} rounded-t-lg w-full transition-all duration-300" style="height: ${heightPercent}%;">
-                        </div>
+                        <div class="${barColor} rounded-t-lg w-full transition-all duration-300" style="height: ${heightPercent}%;"> </div>
                         <div class="text-xs mt-1 text-gray-600 font-semibold">${weekData.week}</div>
                         <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-sm font-bold text-white bg-black/70 p-1 rounded hidden group-hover:block whitespace-nowrap z-30">${barLabel}</div>
                     </div>
@@ -800,160 +798,137 @@
                 const y = 90 - ((lrDistance / maxLongRunDist) * 80);
                 points.push({ x, y, lr: lrDistance, week: weekData.week });
             });
-            
+
             graphContainer.innerHTML = barsHtml.join('');
 
             // Build SVG for Long Run Line
-            let svgPathData = points.map((p, index) => 
-                `${index === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`
-            ).join(' ');
-
+            let svgPathData = points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%` ).join(' ');
             const svgHTML = `
                 <div class="absolute bottom-0 left-0 w-full h-full pointer-events-none">
                     <svg class="h-full w-full absolute top-0 left-0" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <path d="${svgPathData}" fill="none" stroke="#F97316" stroke-width="0.8" />
                         ${points.map(p => `
-                            <circle cx="${p.x}%" cy="${p.y}%" r="0.6" fill="#F97316" class="pointer-events-auto cursor-help" 
-                                title="LR Week ${p.week}: ${p.lr} กม." />
+                            <circle cx="${p.x}%" cy="${p.y}%" r="0.6" fill="#F97316" class="pointer-events-auto cursor-help" title="LR Week ${p.week}: ${p.lr} กม." />
                         `).join('')}
                     </svg>
                 </div>
             `;
-
             graphContainer.closest('.relative').insertAdjacentHTML('beforeend', svgHTML);
         }
 
         function renderPlan({ plan, userName, targetRaceName, targetDistanceKm, durationWeeks, peakMileage }) {
             if (!Array.isArray(plan) || plan.length === 0) {
-                document.getElementById('planOutput').innerHTML = '<div class="text-center text-red-500 py-10">❌ ไม่สามารถสร้างแผนได้: ข้อมูลแผนซ้อมว่างเปล่า กรุณาตรวจสอบข้อมูลนำเข้า</div>';
-                renderVolumeGraph(null, 0); 
+                document.getElementById('planOutput').innerHTML = '<div class="text-center text-red-500 py-10">🚨 ไม่สามารถสร้างแผนได้ กรุณาตรวจสอบข้อมูลที่กรอกให้ถูกต้อง</div>';
                 return;
             }
-            
-            const output = document.getElementById('planOutput');
-            
-            // 1. Render Graph
-            renderVolumeGraph(plan, peakMileage);
 
-            // 2. Render Table
+            document.getElementById('displayUserNameHeader').textContent = `✅ แผนซ้อมของคุณ: ${userName} (${targetRaceName}) ระยะ ${targetDistanceKm} กม.`;
+            
+            const peakWeek = plan.findIndex(w => w.weeklyVolume === peakMileage) + 1;
+
             let html = `
-                <div class="mb-4 p-4 rounded-xl bg-primary-light border-l-4 border-primary card-shadow">
-                    <h2 class="text-xl font-bold text-gray-800">🗓️ แผนซ้อม ${durationWeeks} สัปดาห์สำหรับ **${userName}**</h2>
-                    <p class="text-sm text-gray-700">เป้าหมาย: **${targetRaceName}** (${targetDistanceKm} กม.)</p>
+                <div class="mb-6 bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                    <p class="text-sm text-gray-700"><strong>Summary:</strong> แผนซ้อม ${durationWeeks} สัปดาห์ ระยะ ${targetDistanceKm} กม. เวลาเป้าหมาย: ${document.getElementById('displayGoalPace').textContent} /กม. | Benchmark Pace: ${document.getElementById('displayEasyPace').textContent} /กม. (Easy)</p>
+                    <p class="text-sm text-gray-700 mt-2">📊 <strong>Weekly Mileage Progression:</strong> Start: ${plan[0].weeklyVolume} กม./สัปดาห์, Peak: ${peakMileage} กม./สัปดาห์ (สัปดาห์ที่ ${peakWeek})</p>
                 </div>
-            `;
-
-            html += `<div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 clean-table">
-                    <thead class="bg-gray-100 sticky top-0">
+                
+                <div class="table-container overflow-x-auto shadow-lg rounded-xl">
+                    <table id="planTable" class="clean-table min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase sticky-col bg-gray-100 z-20 w-[5%]">สัปดาห์</th>
+                            <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase sticky-col w-12">Wk</th>
                             <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase w-[10%]">Volume</th>
-                            ${DAY_NAMES_TH.map(day => `<th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase w-[10%]">${day.substring(0, 2)}</th>`).join('')}
+                            ${DAYS_OF_WEEK.map(day => `<th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase w-[10%]">${day.substring(0, 2)}</th>`).join('')}
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
             `;
 
             plan.forEach(weekData => {
-                const dailyPlan = weekData.dailyPlan || []; 
+                const dailyPlan = weekData.dailyPlan || [];
                 const volumePercentage = (weekData.weeklyVolume / peakMileage) * 100;
-                
                 let rowClass = 'bg-white';
                 if (weekData.isRaceWeek) {
-                     rowClass = 'race-week';
+                    rowClass = 'race-week';
                 } else if (weekData.isTaper) {
                     rowClass = 'taper-week';
                 } else if (weekData.isPeak) {
                     rowClass = 'peak-week';
-                } else if (weekData.week < durationWeeks - 2 && ((weekData.week - 1) % 4) === 3) { 
-                     rowClass = 'bg-gray-50/70'; 
+                } else if (weekData.week < durationWeeks - 2 && ((weekData.week - 1) % 4) === 3) {
+                    rowClass = 'bg-gray-50/70';
                 }
-                
+
                 const weekSummary = weekData.isRaceWeek ? '🏁' : weekData.isTaper ? '🔻' : (weekData.week < durationWeeks - 2 && ((weekData.week - 1) % 4) === 3) ? '♻️' : weekData.isPeak ? '⬆️' : '';
 
                 html += `<tr class="${rowClass}">
-                    <td class="px-2 py-3 font-bold text-gray-800 sticky-col ${rowClass} z-10">${weekData.week} ${weekSummary}</td>
+                    <td class="px-2 py-3 font-bold text-gray-800 sticky-col ${rowClass} z-10 w-12">${weekData.week} ${weekSummary}</td>
                     <td class="px-2 py-3 font-bold text-primary w-[10%]">
                         ${weekData.weeklyVolume} กม.
                         <div class="w-full h-1 bg-gray-200 rounded-full mt-1">
                             <div class="h-1 bg-primary rounded-full" style="width: ${volumePercentage}%;"></div>
                         </div>
                     </td>
-                    ${dailyPlan.map(daily => { 
+                    ${dailyPlan.map(daily => {
                         const workout = daily.workout;
-                        if (!workout || !workout.zone) { 
+                        if (!workout || !workout.zone) {
                             return `<td class="px-2 py-3 bg-gray-100"><p class="text-gray-500">N/A</p></td>`;
                         }
-
                         const paceFormatted = PaceCalculator.formatPace(workout.pace);
-                        const paceColor = workout.zone.color; 
+                        const paceColor = workout.zone.color;
                         const cellBg = workout.type === 'Rest' ? 'bg-gray-100' : workout.type === 'Long Run' ? 'bg-green-50/70' : workout.type === 'Race Day' ? 'bg-red-100/70' : '';
-
+                        
                         return `<td class="px-2 py-3 ${cellBg} w-[10%]">
                             <p class="font-bold text-gray-800 leading-tight">${workout.type.replace('Cross Train', 'Cross').replace('Shakeout', 'Shake')}</p>
-                            <p class="text-gray-600 leading-tight">${workout.baseDescription.substring(0, 30)}...</p>
-                            ${workout.type !== 'Rest' && workout.type !== 'Cross Train' ? `<p class="font-bold ${paceColor} mt-1 leading-tight">${paceFormatted}</p>` : ''}
-                            ${workout.type !== 'Rest' ? `<p class="text-gray-500 text-xs leading-tight">${workout.zone.hr.replace(' MaxHR', '')}</p>` : ''}
+                            <p class="pace-details ${paceColor} leading-tight">${paceFormatted}</p> 
+                            <p class="pace-details text-gray-500 leading-tight">${workout.zone.hr.replace('Z', '').replace('BPM', '').trim()}</p>
+                            <p class="text-gray-500 text-xs mt-0.5 leading-tight whitespace-normal">${workout.baseDescription}</p>
                         </td>`;
                     }).join('')}
                 </tr>`;
             });
 
-            html += '</tbody></table></div>';
-            output.innerHTML = html;
+            html += `</tbody></table></div>`;
+            document.getElementById('planOutput').innerHTML = html;
+            renderVolumeGraph(plan, peakMileage);
         }
-
-
-        // --- Initialization and Event Listener Setup ---
 
         document.addEventListener('DOMContentLoaded', () => {
             fillDaySelectors();
-            generateDayCheckboxes(); 
+            generateDayCheckboxes();
             updatePacePreview(); 
-
-            // Include userRHR in paceInputs for immediate HR update
-            const paceInputs = document.querySelectorAll('#targetHours, #targetMinutes, #targetSeconds, #targetDistanceKm, #benchmarkDistanceKm, #bmHours, #bmMinutes, #bmSeconds, #userName, #experienceLevel, #currentWeeklyMileage, #planDuration, #userAge, #userRHR');
-            paceInputs.forEach(element => {
-                element.addEventListener('input', updatePacePreview);
-            });
             
-            const daySelectors = document.querySelectorAll('#longRunDay, #intervalDay, #tempoDay, input[name="restDay"]');
-            daySelectors.forEach(element => {
-                element.addEventListener('change', checkAllDayConflicts);
+            document.querySelectorAll('#planForm input, #planForm select').forEach(element => {
+                element.addEventListener('change', updatePacePreview);
+                element.addEventListener('keyup', updatePacePreview);
             });
 
-            // --- Submit Handler ---
             document.getElementById('planForm').addEventListener('submit', function(e) {
-                e.preventDefault(); 
-                
-                // 1. Gather Input
-                const userName = document.getElementById('userName').value.trim() || 'นักวิ่งมือใหม่';
-                const targetRaceName = document.getElementById('targetRaceName').value.trim() || 'งานวิ่งเป้าหมาย';
+                e.preventDefault();
+
+                // 1. Collect Data
+                const userName = document.getElementById('userName').value || 'Runner';
+                const targetRaceName = document.getElementById('targetRaceName').value || 'Race';
                 const userAge = parseInt(document.getElementById('userAge').value) || 0;
                 const userRHR = parseInt(document.getElementById('userRHR').value) || 0;
                 const maxHR = HRCalculator.calculateMaxHR(userAge);
                 const currentMileage = parseFloat(document.getElementById('currentWeeklyMileage').value) || 0;
                 const planDuration = document.getElementById('planDuration').value;
                 const experienceLevel = document.getElementById('experienceLevel').value;
-                
                 const targetDistKm = parseFloat(document.getElementById('targetDistanceKm').value) || 0;
                 const targetHours = parseInt(document.getElementById('targetHours').value) || 0;
                 const targetMinutes = parseInt(document.getElementById('targetMinutes').value) || 0;
                 const targetSeconds = parseInt(document.getElementById('targetSeconds').value) || 0;
-                
                 const bmDistKm = parseFloat(document.getElementById('benchmarkDistanceKm').value) || 0;
                 const bmHours = parseInt(document.getElementById('bmHours').value) || 0;
                 const bmMinutes = parseInt(document.getElementById('bmMinutes').value) || 0;
                 const bmSeconds = parseInt(document.getElementById('bmSeconds').value) || 0;
-
                 const longRunDay = document.getElementById('longRunDay').value;
                 const intervalDay = document.getElementById('intervalDay').value;
                 const tempoDay = document.getElementById('tempoDay').value;
                 const restDays = Array.from(document.querySelectorAll('input[name="restDay"]:checked')).map(cb => cb.value);
                 const trainingDaysCount = DAYS_OF_WEEK.length - restDays.length;
 
-                // 2. Validate essential inputs
+                // 2. Validate Data
                 const targetPaceSecs = PaceCalculator.calculatePace(targetHours, targetMinutes, targetSeconds, targetDistKm);
                 const bmPaceSecs = PaceCalculator.calculatePace(bmHours, bmMinutes, bmSeconds, bmDistKm);
 
